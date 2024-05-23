@@ -51,7 +51,7 @@ class Start:
                         timestamp, balance = await self.claim()
                         logger.success(f"Thread {self.thread} | Claimed reward! Balance: {balance}")
                     else:
-                        logger.info(f"Thread {self.thread} | Next claim & Sleep {end_time-timestamp} seconds!")
+                        logger.info(f"Thread {self.thread} | Next claim in {end_time-timestamp} seconds!")
                     await asyncio.sleep(5)
 
             except Exception as e:
