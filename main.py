@@ -7,7 +7,6 @@ from utils.core import get_all_lines
 
 
 async def main():
-    print("Soft's author: https://t.me/ApeCryptor\n")
     action = int(input("Select action:\n1. Start claimer\n2. Create sessions\n\n> "))
 
     if action == 2:
