@@ -6,3 +6,6 @@
 
 ### Library Installation 📚
 `pip install -r requirements.txt`
+
+## Disclaimer
+Use it on your own risk. I'm not responsible for anything happen to your account.
