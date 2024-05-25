@@ -34,6 +34,14 @@ class Start:
 
         while True:
             try:
+                msg = await self.claim_daily_reward()
+                if isinstance(msg, bool) and msg:
+                    logger.success(f"Thread {self.thread} | Claimed daily reward!")
+                else:
+                    logger.info(f"Thread {self.thread} | Daily reward already claimed!")
+
+                timestamp, start_time, end_time = await self.balance()
+
                 currentTimestamp = time.time()
                 logger.info(f"Token Expired in {self.token_expiry-currentTimestamp} seconds")
 
@@ -52,10 +60,18 @@ class Start:
                         logger.success(f"Thread {self.thread} | Claimed reward! Balance: {balance}")
                     else:
                         logger.info(f"Thread {self.thread} | Next claim in {end_time-timestamp} seconds!")
+                        #logger.info(f"Thread {self.thread} | Sleep {self.token_expiry-currentTimestamp} seconds!")
+                        #await asyncio.sleep(self.token_expiry-currentTimestamp)
                     await asyncio.sleep(5)
 
             except Exception as e:
                 logger.error(f"Thread {self.thread} | Error: {e}")
+
+    async def claim_daily_reward(self):
+        resp = await self.session.post("https://game-domain.blum.codes/api/v1/daily-reward?offset=-180", proxy=self.proxy)
+        txt = await resp.text()
+        await asyncio.sleep(1)
+        return True if txt == 'OK' else txt                
 
     async def claim(self):
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/farming/claim", proxy=self.proxy)
