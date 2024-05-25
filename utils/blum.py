@@ -60,8 +60,8 @@ class Start:
                         logger.success(f"Thread {self.thread} | Claimed reward! Balance: {balance}")
                     else:
                         logger.info(f"Thread {self.thread} | Next claim in {end_time-timestamp} seconds!")
-                        #logger.info(f"Thread {self.thread} | Sleep {self.token_expiry-currentTimestamp} seconds!")
-                        #await asyncio.sleep(self.token_expiry-currentTimestamp)
+                        logger.info(f"Thread {self.thread} | Sleep {self.token_expiry-currentTimestamp} seconds!")
+                        await asyncio.sleep(self.token_expiry-currentTimestamp)
                     await asyncio.sleep(5)
 
             except Exception as e:
