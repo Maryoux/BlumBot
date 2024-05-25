@@ -37,35 +37,32 @@ class Start:
                 msg = await self.claim_daily_reward()
                 if isinstance(msg, bool) and msg:
                     logger.success(f"Thread {self.thread} | Claimed daily reward!")
-                else:
-                    logger.info(f"Thread {self.thread} | Daily reward already claimed!")
 
-                timestamp, start_time, end_time = await self.balance()
+                start_time, end_time = await self.balance()
 
                 currentTimestamp = time.time()
                 tokenExp = self.token_expiry-currentTimestamp
-                logger.info(f"Token Expired in {tokenExp} seconds")
                 
                 # Relogin logic (refresh the token if necessary)
                 if (tokenExp <=0):
                     await self.relogin()
                     logger.info(f"Thread {self.thread} | Token refreshed.")
                 else:
-                    timestamp, start_time, end_time = await self.balance()
+                    start_time, end_time = await self.balance()
                     if start_time is None and end_time is None:
                         await self.start()
                         logger.info(f"Thread {self.thread} | Start farming!")
 
-                    elif start_time is not None and end_time is not None and timestamp >= end_time:
-                        timestamp, balance = await self.claim()
+                    elif start_time is not None and end_time is not None and currentTimestamp >= end_time:
+                        balance = await self.claim()
                         logger.success(f"Thread {self.thread} | Claimed reward! Balance: {balance}")
                     else:
-                        logger.info(f"Thread {self.thread} | Next claim in {end_time-timestamp} seconds!")
-                        if(end_time-timestamp <= tokenExp):
-                            logger.info(f"Thread {self.thread} | Sleep {end_time-timestamp} seconds!")
-                            await asyncio.sleep(end_time-timestamp)
+                        logger.info(f"Thread {self.thread} | Next claim in {end_time-currentTimestamp} seconds!")
+                        if(end_time-currentTimestamp <= tokenExp):
+                            logger.info(f"Thread {self.thread} | Sleep {end_time-currentTimestamp} seconds!")
+                            await asyncio.sleep(end_time-currentTimestamp)
                         else:
-                            logger.info(f"Thread {self.thread} | Sleep {tokenExp} seconds!")
+                            logger.info(f"Thread {self.thread} | Refresh token in {tokenExp} seconds!")
                             await asyncio.sleep(tokenExp)
                     await asyncio.sleep(5)
 
@@ -81,9 +78,8 @@ class Start:
     async def claim(self):
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/farming/claim", proxy=self.proxy)
         resp_json = await self.parse_json_response(resp)
-        timestamp = time.time()
-
-        return timestamp, resp_json.get("availableBalance")
+        
+        return resp_json.get("availableBalance")
 
     async def start(self):
         await self.session.post("https://game-domain.blum.codes/api/v1/farming/start", proxy=self.proxy)
@@ -91,8 +87,6 @@ class Start:
     async def balance(self):
         resp = await self.session.get("https://game-domain.blum.codes/api/v1/user/balance", proxy=self.proxy)
         resp_json = await self.parse_json_response(resp)
-        print(resp_json)
-        timestamp = time.time()
         if resp_json.get("farming"):
             start_time = resp_json.get("farming").get("startTime")
             end_time = resp_json.get("farming").get("endTime")
@@ -102,8 +96,8 @@ class Start:
             if end_time is not None:
                 finalEndTime = float(end_time/1000)
 
-            return timestamp, finalStartTime, finalEndTime
-        return timestamp, None, None
+            return finalStartTime, finalEndTime
+        return None, None
 
     async def login(self):
         json_data = {"query": await self.get_tg_web_data()}
