@@ -43,10 +43,11 @@ class Start:
                 timestamp, start_time, end_time = await self.balance()
 
                 currentTimestamp = time.time()
-                logger.info(f"Token Expired in {self.token_expiry-currentTimestamp} seconds")
-
+                tokenExp = self.token_expiry-currentTimestamp
+                logger.info(f"Token Expired in {tokenExp} seconds")
+                
                 # Relogin logic (refresh the token if necessary)
-                if (self.token_expiry-currentTimestamp <=0):
+                if (tokenExp <=0):
                     await self.relogin()
                     logger.info(f"Thread {self.thread} | Token refreshed.")
                 else:
@@ -60,8 +61,12 @@ class Start:
                         logger.success(f"Thread {self.thread} | Claimed reward! Balance: {balance}")
                     else:
                         logger.info(f"Thread {self.thread} | Next claim in {end_time-timestamp} seconds!")
-                        logger.info(f"Thread {self.thread} | Sleep {self.token_expiry-currentTimestamp} seconds!")
-                        await asyncio.sleep(self.token_expiry-currentTimestamp)
+                        if(end_time-timestamp <= tokenExp):
+                            logger.info(f"Thread {self.thread} | Sleep {end_time-timestamp} seconds!")
+                            await asyncio.sleep(end_time-timestamp)
+                        else:
+                            logger.info(f"Thread {self.thread} | Sleep {tokenExp} seconds!")
+                            await asyncio.sleep(tokenExp)
                     await asyncio.sleep(5)
 
             except Exception as e:
