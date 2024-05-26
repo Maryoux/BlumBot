@@ -46,7 +46,7 @@ class Start:
                 # Relogin logic (refresh the token if necessary)
                 if (tokenExp <=0):
                     await self.relogin()
-                    logger.info(f"Thread {self.thread} | Token refreshed.")
+                    logger.success(f"Thread {self.thread} | Token refreshed.")
                 else:
                     start_time, end_time = await self.balance()
                     if start_time is None and end_time is None:
