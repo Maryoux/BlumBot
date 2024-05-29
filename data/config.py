@@ -5,6 +5,9 @@ API_HASH = 'qwerty123456'
 # delay between connections to accounts (the more accounts, the longer the delay)
 ACC_DELAY = [5, 15]
 
+# point per game
+POINT = [140, 160]
+
 # session folder (do not change)
 WORKDIR = "sessions/"
 
