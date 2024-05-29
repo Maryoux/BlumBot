@@ -34,12 +34,6 @@ class Start:
 
         while True:
             try:
-                msg = await self.claim_daily_reward()
-                if isinstance(msg, bool) and msg:
-                    logger.success(f"Thread {self.thread} | Claimed daily reward!")
-
-                start_time, end_time = await self.balance()
-
                 currentTimestamp = time.time()
                 tokenExp = self.token_expiry-currentTimestamp
                 
@@ -48,7 +42,31 @@ class Start:
                     await self.relogin()
                     logger.success(f"Thread {self.thread} | Token refreshed.")
                 else:
-                    start_time, end_time = await self.balance()
+                    msg = await self.claim_daily_reward()
+                    if isinstance(msg, bool) and msg:
+                        logger.info(f"Thread {self.thread} | Claimed daily reward!")
+
+
+                    start_time, end_time, play_passes = await self.balance()
+                    while (int(play_passes)>0):
+                        logger.info(f"Thread {self.thread} | Play remaining: {play_passes}")
+                        game_id = await self.start_game()
+                        if not game_id:
+                            logger.error(f"Thread {self.thread} | Couldn't start play in game!")
+                            continue
+
+                        logger.info(f"Thread {self.thread} | Start play in game! GameId: {game_id}")
+
+                        msg, points = await self.claim_game(game_id)
+                        if isinstance(msg, bool) and msg:
+                            logger.success(f"Thread {self.thread} | Finish play in game! Reward: {points}")
+                        else:
+                            logger.error(f"Thread {self.thread} | Couldn't play game; msg: {msg}")
+
+                        await asyncio.sleep(random.uniform(5, 10))
+                        start_time, end_time, play_passes = await self.balance()
+
+                    start_time, end_time,play_passes = await self.balance()
                     if start_time is None and end_time is None:
                         await self.start()
                         logger.info(f"Thread {self.thread} | Start farming!")
@@ -73,12 +91,28 @@ class Start:
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/daily-reward?offset=-180", proxy=self.proxy)
         txt = await resp.text()
         await asyncio.sleep(1)
-        return True if txt == 'OK' else txt                
+        return True if txt == 'OK' else txt
+
+    async def start_game(self):
+        await asyncio.sleep(random.uniform(5, 10))
+        resp = await self.session.post("https://game-domain.blum.codes/api/v1/game/play", proxy=self.proxy)
+        resp_json = await resp.json()
+
+        return (resp_json).get("gameId")
+
+    async def claim_game(self, game_id: str):
+        await asyncio.sleep(random.uniform(60, 65))
+        points = random.randint(config.POINT[0], config.POINT[1])
+        json_data = {"gameId": game_id, "points": points}
+        resp = await self.session.post("https://game-domain.blum.codes/api/v1/game/claim", json=json_data, proxy=self.proxy)
+        txt = await resp.text()
+
+        return True if txt == 'OK' else txt, points
 
     async def claim(self):
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/farming/claim", proxy=self.proxy)
         resp_json = await self.parse_json_response(resp)
-        
+
         return resp_json.get("availableBalance")
 
     async def start(self):
@@ -96,8 +130,8 @@ class Start:
             if end_time is not None:
                 finalEndTime = float(end_time/1000)
 
-            return finalStartTime, finalEndTime
-        return None, None
+            return finalStartTime, finalEndTime, resp_json.get("playPasses")
+        return None, None, resp_json.get("playPasses")
 
     async def login(self):
         json_data = {"query": await self.get_tg_web_data()}
