@@ -5,7 +5,7 @@ from data import config
 
 async def create_sessions():
     while True:
-        session_name = input('\nВведите название сессии (для выхода нажмите Enter): ')
+        session_name = input('\nEnter the session name (press Enter to exit): ')
         if not session_name: return
 
         session = pyrogram.Client(
