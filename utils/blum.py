@@ -46,25 +46,8 @@ class Start:
                     if isinstance(msg, bool) and msg:
                         logger.info(f"Thread {self.thread} | Claimed daily reward!")
 
-
-                    start_time, end_time, play_passes = await self.balance()
-                    while (int(play_passes)>0):
-                        logger.info(f"Thread {self.thread} | Play remaining: {play_passes}")
-                        game_id = await self.start_game()
-                        if not game_id:
-                            logger.error(f"Thread {self.thread} | Couldn't start play in game!")
-                            continue
-
-                        logger.info(f"Thread {self.thread} | Start play in game! GameId: {game_id}")
-
-                        msg, points = await self.claim_game(game_id)
-                        if isinstance(msg, bool) and msg:
-                            logger.success(f"Thread {self.thread} | Finish play in game! Reward: {points}")
-                        else:
-                            logger.error(f"Thread {self.thread} | Couldn't play game; msg: {msg}")
-
-                        await asyncio.sleep(random.uniform(5, 10))
-                        start_time, end_time, play_passes = await self.balance()
+                    await self.play_game()
+                    await asyncio.sleep()
 
                     start_time, end_time,play_passes = await self.balance()
                     if start_time is None and end_time is None:
@@ -82,10 +65,30 @@ class Start:
                         else:
                             logger.info(f"Thread {self.thread} | Refresh token in {tokenExp} seconds!")
                             await asyncio.sleep(tokenExp)
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(1)
 
             except Exception as e:
                 logger.error(f"Thread {self.thread} | Error: {e}")
+
+    async def play_game(self):
+        start_time, end_time, play_passes = await self.balance()
+        while (int(play_passes)>0):
+            logger.info(f"Thread {self.thread} | Play remaining: {play_passes}")
+            game_id = await self.start_game()
+            if not game_id:
+                logger.error(f"Thread {self.thread} | Couldn't start play in game!")
+                continue
+
+            logger.info(f"Thread {self.thread} | Start play in game! GameId: {game_id}")
+
+            msg, points = await self.claim_game(game_id)
+            if isinstance(msg, bool) and msg:
+                logger.success(f"Thread {self.thread} | Finish play in game! Reward: {points}")
+            else:
+                logger.error(f"Thread {self.thread} | Couldn't play game; msg: {msg}")
+
+            await asyncio.sleep(random.uniform(5, 10))
+            start_time, end_time, play_passes = await self.balance()
 
     async def claim_daily_reward(self):
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/daily-reward?offset=-180", proxy=self.proxy)
@@ -112,7 +115,6 @@ class Start:
     async def claim(self):
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/farming/claim", proxy=self.proxy)
         resp_json = await self.parse_json_response(resp)
-
         return resp_json.get("availableBalance")
 
     async def start(self):
