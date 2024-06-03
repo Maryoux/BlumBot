@@ -100,7 +100,6 @@ class Start:
         await asyncio.sleep(random.uniform(5, 10))
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/game/play", proxy=self.proxy)
         resp_json = await resp.json()
-        print(resp_json)
 
         return (resp_json).get("gameId")
 
@@ -116,7 +115,6 @@ class Start:
     async def claim(self):
         resp = await self.session.post("https://game-domain.blum.codes/api/v1/farming/claim", proxy=self.proxy)
         resp_json = await self.parse_json_response(resp)
-        print(resp_json)
         return resp_json.get("availableBalance")
 
     async def start(self):
@@ -125,7 +123,6 @@ class Start:
     async def balance(self):
         resp = await self.session.get("https://game-domain.blum.codes/api/v1/user/balance", proxy=self.proxy)
         resp_json = await self.parse_json_response(resp)
-        print(resp_json)
         if resp_json.get("farming"):
             start_time = resp_json.get("farming").get("startTime")
             end_time = resp_json.get("farming").get("endTime")
